@@ -34,4 +34,8 @@ public class Util {
         }
     }
 
+    public static Connection getHibernateConnection() {
+        return null;
+    }
+
 }
