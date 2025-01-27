@@ -67,9 +67,9 @@ public class Util {
         settings.put("hibernate.connection.url", URL);
         settings.put("hibernate.connection.username", USERNAME);
         settings.put("hibernate.connection.password", PASSWORD);
-        settings.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        settings.put("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
         settings.put("hibernate.show_sql", "true");
-        settings.put("hibernate.hbm2ddl.auto", "update");
+        settings.put("hibernate.hbm2ddl.auto", "create-drop");
         settings.put("hibernate.current_session_context_class", "thread");
 
         configuration.setProperties(settings);
