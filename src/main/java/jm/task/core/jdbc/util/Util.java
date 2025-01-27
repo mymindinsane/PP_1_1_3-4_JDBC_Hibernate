@@ -4,6 +4,7 @@ import java.util.Properties;
 
 
 import jm.task.core.jdbc.model.User;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -18,6 +19,7 @@ public class Util {
     private final static String PASSWORD = "root";
     private static Connection connection;
     private static SessionFactory sessionFactory;
+    private static Session currentSession;
 
     public static Connection getConnection() {
         connection = null;
@@ -75,5 +77,19 @@ public class Util {
         configuration.setProperties(settings);
         return configuration;
     }
+
+    public static Session openCurrentSession() {
+        currentSession = getSessionFactory().openSession();
+        return currentSession;
+    }
+
+    public static void closeCurrentSession() {
+        currentSession.close();
+    }
+
+    public static void closeSessionFactory () {
+        sessionFactory.close();
+    }
+
 
 }

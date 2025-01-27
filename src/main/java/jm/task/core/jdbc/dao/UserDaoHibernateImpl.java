@@ -4,15 +4,15 @@ import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-
+import org.hibernate.query.Query;
 
 
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
-    private final SessionFactory sessionFactory = Util.getSessionFactory();
+    private final Session currentSession = Util.openCurrentSession();
+    private Transaction transaction = currentSession.beginTransaction();
 
     public UserDaoHibernateImpl() {
 
@@ -21,56 +21,95 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void createUsersTable() {
-        try (Session session = sessionFactory.openSession()) {
-            Transaction transaction = session.beginTransaction();
-            session.createSQLQuery("CREATE TABLE IF NOT EXISTS sakila.users_table" +
-                    "(Id  INT NOT NULL PRIMARY KEY AUTO_INCREMENT ," +
-                    "Age TINYINT NOT NULL ," +
-                    "FirstName VARCHAR(20) NOT NULL ," +
-                    "LastName VARCHAR(20) NOT NULL);").addEntity(User.class).executeUpdate();
+        try {
+            if (!transaction.isActive()) {
+                transaction = currentSession.beginTransaction();
+            }
+            Query<User> query = currentSession.createNativeQuery("CREATE TABLE IF NOT EXISTS sakila.users_table"
+                    + "(Id  INT NOT NULL PRIMARY KEY AUTO_INCREMENT ," + "Age TINYINT NOT NULL ,"
+                    + "FirstName VARCHAR(20) NOT NULL ," + "LastName VARCHAR(20) NOT NULL);", User.class);
+            query.executeUpdate();
             transaction.commit();
             System.out.println("Table created successfully");
-        } catch (HibernateException e){
-
+        } catch (HibernateException e) {
+            transaction.rollback();
+            System.out.println("Error when creating table");
         }
     }
 
     @Override
     public void dropUsersTable() {
-        try (Session session = sessionFactory.openSession()) {
-            Transaction transaction = session.beginTransaction();
-            session.createSQLQuery("DROP TABLE IF EXISTS sakila.users_table")
-                    .addEntity(User.class).executeUpdate();
+        try {
+            if (!transaction.isActive()) {
+                transaction = currentSession.beginTransaction();
+            }
+            Query<User> query = currentSession.createNativeQuery("DROP TABLE IF EXISTS sakila.users_table",
+                    User.class);
+            query.executeUpdate();
             transaction.commit();
             System.out.println("Table dropped successfully");
-        } catch (HibernateException e){
-
+        } catch (HibernateException e) {
+            transaction.rollback();
+            System.out.println("Error when dropping table");
         }
     }
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        try (Session session = sessionFactory.openSession()) {
-            Transaction transaction = session.beginTransaction();
-            session.persist(new User(name,lastName,age));
+        try {
+            if (!transaction.isActive()) {
+                transaction = currentSession.beginTransaction();
+            }
+            currentSession.persist(new User(name, lastName, age));
             transaction.commit();
-        } catch (HibernateException e){
-
+            System.out.println("User с именем — " + name + " добавлен в базу данных");
+        } catch (HibernateException e) {
+            transaction.rollback();
+            System.out.println("Error when saving user");
         }
     }
 
     @Override
     public void removeUserById(long id) {
-
+        try {
+            if (!transaction.isActive()) {
+                transaction = currentSession.beginTransaction();
+            }
+            Query<User> query = currentSession.createNativeQuery("DELETE FROM sakila.users_table WHERE Id = :id",
+                    User.class);
+            query.executeUpdate();
+            transaction.commit();
+        } catch (HibernateException e) {
+            transaction.rollback();
+            System.out.println("Error when removing user by id");
+        }
     }
 
     @Override
     public List<User> getAllUsers() {
-        return null;
+        try {
+            return currentSession.createNativeQuery("SELECT * FROM sakila.users_table", User.class).list();
+        } catch (HibernateException e) {
+            System.out.println("Error when getting the list of all users");
+        }
+        return List.of();
     }
 
     @Override
     public void cleanUsersTable() {
-
+        try {
+            if (!transaction.isActive()) {
+                transaction = currentSession.beginTransaction();
+            }
+            Query<User> query = currentSession.createNativeQuery("DELETE FROM sakila.users_table", User.class);
+            query.executeUpdate();
+            transaction.commit();
+        } catch (HibernateException e) {
+            transaction.rollback();
+            System.out.println("Error when clearing the table");
+        }
     }
 }
+
+
+
