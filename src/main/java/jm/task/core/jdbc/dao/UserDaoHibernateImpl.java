@@ -12,7 +12,8 @@ import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
     private final Session currentSession = Util.openCurrentSession();
-    private Transaction transaction = currentSession.beginTransaction();
+    private Transaction transaction = currentSession.getTransaction();
+
 
     public UserDaoHibernateImpl() {
 
@@ -75,9 +76,10 @@ public class UserDaoHibernateImpl implements UserDao {
             if (!transaction.isActive()) {
                 transaction = currentSession.beginTransaction();
             }
-            Query<User> query = currentSession.createNativeQuery("DELETE FROM sakila.users_table WHERE Id = :id",
-                    User.class);
-            query.executeUpdate();
+            User user = currentSession.find(User.class, id);
+            if (user != null) {
+                currentSession.remove(user);
+            }
             transaction.commit();
         } catch (HibernateException e) {
             transaction.rollback();
@@ -97,6 +99,7 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void cleanUsersTable() {
+
         try {
             if (!transaction.isActive()) {
                 transaction = currentSession.beginTransaction();
