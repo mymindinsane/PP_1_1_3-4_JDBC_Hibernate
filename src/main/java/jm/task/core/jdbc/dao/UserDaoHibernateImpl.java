@@ -8,6 +8,9 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -90,7 +93,13 @@ public class UserDaoHibernateImpl implements UserDao {
     @Override
     public List<User> getAllUsers() {
         try {
-            return currentSession.createNativeQuery("SELECT * FROM sakila.users_table", User.class).list();
+            CriteriaBuilder criteriaBuilder = currentSession.getCriteriaBuilder();
+            CriteriaQuery<User> criteriaQuery = criteriaBuilder.createQuery(User.class);
+            Root<User> root = criteriaQuery.from(User.class);
+            criteriaQuery.select(root);
+
+            Query<User> allQuery = currentSession.createQuery(criteriaQuery);
+            return allQuery.getResultList();
         } catch (HibernateException e) {
             System.out.println("Error when getting the list of all users");
         }
