@@ -72,7 +72,12 @@ public class Util {
         settings.put("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
         settings.put("hibernate.show_sql", "true");
         settings.put("hibernate.hbm2ddl.auto", "create-drop");
-        settings.put("hibernate.current_session_context_class", "thread");
+
+        settings.put("hibernate.connection.initial_pool_size", "5");
+        settings.put("hibernate.connection.pool_size", "10");
+        settings.put("hibernate.connection.pool_validation_interval", "3000");
+
+
 
         configuration.setProperties(settings);
         return configuration;
